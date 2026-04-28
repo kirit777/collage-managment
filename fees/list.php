@@ -1,0 +1,5 @@
+<?php require_once __DIR__ . '/../config.php'; requireLogin(); $pageTitle='Fees'; $assetPrefix='../'; ?>
+<?php include __DIR__ . '/../includes/header.php'; include __DIR__ . '/../includes/sidebar.php'; ?>
+<main class="main-content"><header class="topbar"><button class="btn btn-light" onclick="toggleSidebar()"><i class="bi bi-list"></i></button><h5>Fees Management</h5><button class="btn btn-primary" onclick="window.print()">Print Receipt</button></header>
+<div class="table-card"><table class="table"><thead><tr><th>Student Name</th><th>Course</th><th>Total Fee</th><th>Paid</th><th>Pending</th><th>Status</th></tr></thead><tbody><?php foreach($students as $s): $pending=$s['total_fee']-$s['fees']; ?><tr><td><?= sanitize($s['name']) ?></td><td><?= $s['course'] ?></td><td><?= currency($s['total_fee']) ?></td><td><?= currency($s['fees']) ?></td><td><?= currency($pending) ?></td><td><span class="badge <?= $pending===0?'text-bg-success':'text-bg-warning' ?>"><?= $pending===0?'Paid':'Pending' ?></span></td></tr><?php endforeach; ?></tbody></table></div></main>
+<?php include __DIR__ . '/../includes/footer.php'; ?>
