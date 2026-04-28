@@ -1,0 +1,5 @@
+<?php require_once __DIR__ . '/../config.php'; requireLogin(); $pageTitle='Attendance'; $assetPrefix='../'; ?>
+<?php include __DIR__ . '/../includes/header.php'; include __DIR__ . '/../includes/sidebar.php'; ?>
+<main class="main-content"><header class="topbar"><button class="btn btn-light" onclick="toggleSidebar()"><i class="bi bi-list"></i></button><h5>Attendance Management</h5><input type="date" class="form-control w-auto" value="<?= date('Y-m-d') ?>"></header>
+<div class="table-card"><table class="table"><thead><tr><th>Student</th><th>Course</th><th>Present</th><th>Absent</th><th>Leave</th></tr></thead><tbody><?php foreach(array_slice($students,0,12) as $s): ?><tr><td><?= sanitize($s['name']) ?></td><td><?= $s['course'] ?></td><td><input type="checkbox" checked></td><td><input type="checkbox"></td><td><input type="checkbox"></td></tr><?php endforeach; ?></tbody></table><button class="btn btn-primary">Save Attendance</button></div></main>
+<?php include __DIR__ . '/../includes/footer.php'; ?>

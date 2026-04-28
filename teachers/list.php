@@ -1,0 +1,5 @@
+<?php require_once __DIR__ . '/../config.php'; requireLogin(); $pageTitle='Teachers'; $assetPrefix='../'; ?>
+<?php include __DIR__ . '/../includes/header.php'; include __DIR__ . '/../includes/sidebar.php'; ?>
+<main class="main-content"><header class="topbar"><button class="btn btn-light" onclick="toggleSidebar()"><i class="bi bi-list"></i></button><h5>Teacher Management</h5><button class="btn btn-primary">+ Add Teacher</button></header>
+<div class="table-card"><table class="table table-hover"><thead><tr><th>ID</th><th>Name</th><th>Department</th><th>Subject</th><th>Salary</th><th>Contact</th><th>Action</th></tr></thead><tbody><?php foreach($teachers as $t): ?><tr><td><?= $t['id'] ?></td><td><?= sanitize($t['name']) ?></td><td><?= sanitize($t['department']) ?></td><td><?= sanitize($t['subject']) ?></td><td><?= currency($t['salary']) ?></td><td><?= sanitize($t['contact']) ?></td><td><button class="btn btn-sm btn-outline-primary">Edit</button> <button class="btn btn-sm btn-outline-danger" onclick="demoDelete()">Delete</button></td></tr><?php endforeach; ?></tbody></table></div></main>
+<?php include __DIR__ . '/../includes/footer.php'; ?>

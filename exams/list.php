@@ -1,0 +1,5 @@
+<?php require_once __DIR__ . '/../config.php'; requireLogin(); $pageTitle='Exams'; $assetPrefix='../'; $exams=[['Mid Term','BCA','2026-05-10'],['Semester Final','BBA','2026-05-22'],['Internal','MBA','2026-06-02']]; ?>
+<?php include __DIR__ . '/../includes/header.php'; include __DIR__ . '/../includes/sidebar.php'; ?>
+<main class="main-content"><header class="topbar"><button class="btn btn-light" onclick="toggleSidebar()"><i class="bi bi-list"></i></button><h5>Exam Management</h5><button class="btn btn-primary">Create Exam</button></header>
+<div class="card p-3"><h6>Exam Timetable / Hall Ticket / Result Entry</h6><table class="table"><thead><tr><th>Exam</th><th>Course</th><th>Date</th><th>Actions</th></tr></thead><tbody><?php foreach($exams as $e): ?><tr><td><?= $e[0] ?></td><td><?= $e[1] ?></td><td><?= $e[2] ?></td><td><button class="btn btn-sm btn-outline-secondary">Hall Ticket</button> <button class="btn btn-sm btn-outline-success">Marksheet</button></td></tr><?php endforeach; ?></tbody></table></div></main>
+<?php include __DIR__ . '/../includes/footer.php'; ?>

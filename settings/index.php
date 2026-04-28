@@ -1,0 +1,6 @@
+<?php require_once __DIR__ . '/../config.php'; requireLogin(); $pageTitle='Settings'; $assetPrefix='../'; $saved=false; if($_SERVER['REQUEST_METHOD']==='POST') $saved=true; ?>
+<?php include __DIR__ . '/../includes/header.php'; include __DIR__ . '/../includes/sidebar.php'; ?>
+<main class="main-content"><header class="topbar"><button class="btn btn-light" onclick="toggleSidebar()"><i class="bi bi-list"></i></button><h5>Settings Panel</h5></header>
+<div class="card p-3"><?php if($saved): ?><div class="alert alert-success">Settings saved (demo mode).</div><?php endif; ?>
+<form method="post" class="row g-3"><div class="col-md-6"><label>College Name</label><input class="form-control" value="Global College"></div><div class="col-md-6"><label>Logo Upload</label><input type="file" class="form-control"></div><div class="col-md-6"><label>Theme Color</label><input type="color" class="form-control form-control-color" value="#2b73ff"></div><div class="col-md-6"><label>Admin Profile Name</label><input class="form-control" value="<?= sanitize($_SESSION['user']['name']) ?>"></div><div class="col-md-6"><label>Change Password</label><input type="password" class="form-control" placeholder="New password"></div><div class="col-12"><button class="btn btn-primary">Save Changes</button></div></form></div></main>
+<?php include __DIR__ . '/../includes/footer.php'; ?>
