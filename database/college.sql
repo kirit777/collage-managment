@@ -1,176 +1,173 @@
 CREATE DATABASE IF NOT EXISTS college_erp CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE college_erp;
 
-CREATE TABLE departments (
-  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  name VARCHAR(120) NOT NULL UNIQUE,
-  hod_faculty_id BIGINT UNSIGNED NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   full_name VARCHAR(150) NOT NULL,
   email VARCHAR(160) NOT NULL UNIQUE,
   password_hash VARCHAR(255) NOT NULL,
-  role ENUM('Super Admin','Principal','Accountant','Faculty','Librarian','Hostel Manager','Student') NOT NULL,
-  last_login_at DATETIME NULL,
+  role ENUM('Super Admin','Principal','Accountant','Faculty','Librarian','Student') NOT NULL,
   is_active TINYINT(1) DEFAULT 1,
+  last_login_at DATETIME NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE courses (
+CREATE TABLE IF NOT EXISTS courses (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  department_id BIGINT UNSIGNED NOT NULL,
   name VARCHAR(120) NOT NULL,
-  course_type ENUM('Degree','Diploma','Certificate') NOT NULL,
-  duration_semesters TINYINT UNSIGNED NOT NULL,
-  annual_fee DECIMAL(12,2) NOT NULL,
-  seat_intake INT UNSIGNED NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT fk_course_department FOREIGN KEY (department_id) REFERENCES departments(id)
+  duration VARCHAR(80) NOT NULL,
+  fees DECIMAL(12,2) NOT NULL,
+  subjects_count INT UNSIGNED DEFAULT 0,
+  seats INT UNSIGNED DEFAULT 0,
+  semester_count TINYINT UNSIGNED DEFAULT 1,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE students (
+CREATE TABLE IF NOT EXISTS students (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  user_id BIGINT UNSIGNED NOT NULL,
-  course_id BIGINT UNSIGNED NOT NULL,
-  student_code VARCHAR(40) NOT NULL UNIQUE,
-  semester TINYINT UNSIGNED NOT NULL,
-  guardian_name VARCHAR(150) NOT NULL,
+  student_code VARCHAR(30) NOT NULL UNIQUE,
+  full_name VARCHAR(150) NOT NULL,
+  email VARCHAR(160) NOT NULL UNIQUE,
   phone VARCHAR(20) NOT NULL,
+  dob DATE NULL,
+  gender ENUM('Male','Female','Other') DEFAULT 'Other',
   address TEXT,
-  admission_date DATE NOT NULL,
+  guardian_name VARCHAR(150) NULL,
+  guardian_phone VARCHAR(20) NULL,
+  course_id BIGINT UNSIGNED NULL,
+  semester TINYINT UNSIGNED DEFAULT 1,
+  admission_date DATE NULL,
+  fees_status ENUM('Pending','Partial','Paid') DEFAULT 'Pending',
+  photo VARCHAR(255) NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT fk_student_user FOREIGN KEY (user_id) REFERENCES users(id),
-  CONSTRAINT fk_student_course FOREIGN KEY (course_id) REFERENCES courses(id)
+  FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE SET NULL
 );
 
-CREATE TABLE faculty (
+CREATE TABLE IF NOT EXISTS faculty (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  user_id BIGINT UNSIGNED NOT NULL,
-  department_id BIGINT UNSIGNED NOT NULL,
-  qualification VARCHAR(120) NOT NULL,
-  experience_years DECIMAL(4,1) DEFAULT 0,
+  full_name VARCHAR(150) NOT NULL,
+  email VARCHAR(160) NOT NULL UNIQUE,
+  department VARCHAR(120) NOT NULL,
   salary DECIMAL(12,2) NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT fk_faculty_user FOREIGN KEY (user_id) REFERENCES users(id),
-  CONSTRAINT fk_faculty_department FOREIGN KEY (department_id) REFERENCES departments(id)
+  subject VARCHAR(120) NULL,
+  phone VARCHAR(20) NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-ALTER TABLE departments ADD CONSTRAINT fk_department_hod FOREIGN KEY (hod_faculty_id) REFERENCES faculty(id);
-
-CREATE TABLE subjects (
-  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  course_id BIGINT UNSIGNED NOT NULL,
-  faculty_id BIGINT UNSIGNED NULL,
-  title VARCHAR(150) NOT NULL,
-  code VARCHAR(30) NOT NULL UNIQUE,
-  semester TINYINT UNSIGNED NOT NULL,
-  CONSTRAINT fk_subject_course FOREIGN KEY (course_id) REFERENCES courses(id),
-  CONSTRAINT fk_subject_faculty FOREIGN KEY (faculty_id) REFERENCES faculty(id)
-);
-
-CREATE TABLE attendance (
+CREATE TABLE IF NOT EXISTS attendance_students (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   student_id BIGINT UNSIGNED NOT NULL,
-  subject_id BIGINT UNSIGNED NOT NULL,
   attendance_date DATE NOT NULL,
-  status ENUM('Present','Absent','Late') NOT NULL,
-  CONSTRAINT fk_attendance_student FOREIGN KEY (student_id) REFERENCES students(id),
-  CONSTRAINT fk_attendance_subject FOREIGN KEY (subject_id) REFERENCES subjects(id),
-  UNIQUE KEY uq_attendance (student_id, subject_id, attendance_date)
+  status ENUM('Present','Absent') NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_std_att (student_id, attendance_date),
+  FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
 );
 
-CREATE TABLE fees (
+CREATE TABLE IF NOT EXISTS attendance_faculty (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  faculty_id BIGINT UNSIGNED NOT NULL,
+  attendance_date DATE NOT NULL,
+  check_in TIME NULL,
+  check_out TIME NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_fac_att (faculty_id, attendance_date),
+  FOREIGN KEY (faculty_id) REFERENCES faculty(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS fees_invoices (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   student_id BIGINT UNSIGNED NOT NULL,
-  invoice_no VARCHAR(50) NOT NULL UNIQUE,
+  invoice_no VARCHAR(50) UNIQUE NOT NULL,
   amount DECIMAL(12,2) NOT NULL,
   due_date DATE NOT NULL,
-  status ENUM('Pending','Paid','Partial') DEFAULT 'Pending',
-  CONSTRAINT fk_fees_student FOREIGN KEY (student_id) REFERENCES students(id)
+  status ENUM('Pending','Partial','Paid') DEFAULT 'Pending',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
 );
 
-CREATE TABLE payments (
+CREATE TABLE IF NOT EXISTS payments (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  fee_id BIGINT UNSIGNED NOT NULL,
+  invoice_id BIGINT UNSIGNED NOT NULL,
   amount DECIMAL(12,2) NOT NULL,
-  paid_at DATETIME NOT NULL,
   method ENUM('Cash','Card','UPI','Online') NOT NULL,
-  reference_no VARCHAR(100),
-  CONSTRAINT fk_payment_fee FOREIGN KEY (fee_id) REFERENCES fees(id)
+  reference_no VARCHAR(120) NULL,
+  paid_at DATETIME NOT NULL,
+  FOREIGN KEY (invoice_id) REFERENCES fees_invoices(id) ON DELETE CASCADE
 );
 
-CREATE TABLE exams (
+CREATE TABLE IF NOT EXISTS exams (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  course_id BIGINT UNSIGNED NOT NULL,
+  course_id BIGINT UNSIGNED NULL,
   exam_name VARCHAR(120) NOT NULL,
-  exam_type ENUM('Internal','Semester') NOT NULL,
   exam_date DATE NOT NULL,
-  session ENUM('Morning','Afternoon','Evening') NOT NULL,
-  CONSTRAINT fk_exam_course FOREIGN KEY (course_id) REFERENCES courses(id)
+  room_no VARCHAR(40) NULL,
+  session ENUM('Morning','Afternoon','Evening') DEFAULT 'Morning',
+  FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE SET NULL
 );
 
-CREATE TABLE results (
+CREATE TABLE IF NOT EXISTS results (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   exam_id BIGINT UNSIGNED NOT NULL,
   student_id BIGINT UNSIGNED NOT NULL,
-  marks_obtained DECIMAL(5,2) NOT NULL,
-  gpa DECIMAL(3,2),
-  cgpa DECIMAL(3,2),
-  rank_position INT UNSIGNED,
-  CONSTRAINT fk_result_exam FOREIGN KEY (exam_id) REFERENCES exams(id),
-  CONSTRAINT fk_result_student FOREIGN KEY (student_id) REFERENCES students(id)
+  marks DECIMAL(5,2) NOT NULL,
+  percentage DECIMAL(5,2) NOT NULL,
+  grade VARCHAR(4) NOT NULL,
+  gpa DECIMAL(3,2) NOT NULL,
+  cgpa DECIMAL(3,2) NOT NULL,
+  UNIQUE KEY uq_result (exam_id, student_id),
+  FOREIGN KEY (exam_id) REFERENCES exams(id) ON DELETE CASCADE,
+  FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
 );
 
-CREATE TABLE books (
+CREATE TABLE IF NOT EXISTS books (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  isbn VARCHAR(30) NOT NULL UNIQUE,
+  isbn VARCHAR(30) UNIQUE NOT NULL,
   title VARCHAR(200) NOT NULL,
   author VARCHAR(150) NOT NULL,
   total_copies INT UNSIGNED NOT NULL,
   available_copies INT UNSIGNED NOT NULL
 );
 
-CREATE TABLE hostel_rooms (
+CREATE TABLE IF NOT EXISTS book_issues (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  room_no VARCHAR(20) NOT NULL UNIQUE,
+  book_id BIGINT UNSIGNED NOT NULL,
+  student_id BIGINT UNSIGNED NOT NULL,
+  issue_date DATE NOT NULL,
+  due_date DATE NOT NULL,
+  return_date DATE NULL,
+  fine DECIMAL(10,2) DEFAULT 0,
+  FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE,
+  FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS hostel_rooms (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  room_no VARCHAR(20) UNIQUE NOT NULL,
   capacity TINYINT UNSIGNED NOT NULL,
   occupied TINYINT UNSIGNED DEFAULT 0,
-  warden_name VARCHAR(120)
+  hostel_fee DECIMAL(12,2) DEFAULT 0
 );
 
-CREATE TABLE transport_routes (
+CREATE TABLE IF NOT EXISTS transport_routes (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   route_name VARCHAR(120) NOT NULL,
-  vehicle_no VARCHAR(40) NOT NULL,
-  driver_name VARCHAR(120) NOT NULL,
-  pickup_points TEXT
+  bus_no VARCHAR(50) NOT NULL,
+  driver_name VARCHAR(120) NOT NULL
 );
 
-CREATE TABLE notices (
+CREATE TABLE IF NOT EXISTS hr_employees (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  full_name VARCHAR(150) NOT NULL,
+  department VARCHAR(120) NOT NULL,
+  salary DECIMAL(12,2) NOT NULL,
+  leave_balance INT DEFAULT 12
+);
+
+CREATE TABLE IF NOT EXISTS notices (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   title VARCHAR(200) NOT NULL,
   content TEXT NOT NULL,
   audience ENUM('All','Students','Faculty','Staff') DEFAULT 'All',
   publish_at DATETIME NOT NULL
-);
-
-CREATE TABLE leave_requests (
-  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  user_id BIGINT UNSIGNED NOT NULL,
-  leave_type VARCHAR(80) NOT NULL,
-  from_date DATE NOT NULL,
-  to_date DATE NOT NULL,
-  reason TEXT,
-  status ENUM('Pending','Approved','Rejected') DEFAULT 'Pending',
-  CONSTRAINT fk_leave_user FOREIGN KEY (user_id) REFERENCES users(id)
-);
-
-CREATE TABLE settings (
-  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  setting_key VARCHAR(120) NOT NULL UNIQUE,
-  setting_value TEXT,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );

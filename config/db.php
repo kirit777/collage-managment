@@ -1,10 +1,15 @@
 <?php
 declare(strict_types=1);
 
-const DB_HOST = '127.0.0.1';
-const DB_NAME = 'college_erp';
-const DB_USER = 'root';
-const DB_PASS = '';
+$configFile = __DIR__ . '/db_config.php';
+if (file_exists($configFile)) {
+    require $configFile;
+}
+
+define('DB_HOST', defined('DB_HOST') ? DB_HOST : '127.0.0.1');
+define('DB_NAME', defined('DB_NAME') ? DB_NAME : 'college_erp');
+define('DB_USER', defined('DB_USER') ? DB_USER : 'root');
+define('DB_PASS', defined('DB_PASS') ? DB_PASS : '');
 
 function getDbConnection(): ?PDO
 {
@@ -12,7 +17,6 @@ function getDbConnection(): ?PDO
     if ($pdo !== false) {
         return $pdo;
     }
-
     try {
         $pdo = new PDO(
             'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=utf8mb4',
@@ -27,11 +31,10 @@ function getDbConnection(): ?PDO
     } catch (Throwable $e) {
         $pdo = null;
     }
-
     return $pdo;
 }
 
-function isDemoMode(): bool
+function isInstalled(): bool
 {
-    return getDbConnection() === null;
+    return file_exists(__DIR__ . '/db_config.php') && getDbConnection() !== null;
 }
