@@ -5,13 +5,40 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
 
-function e(?string $value): string
+const SESSION_TIMEOUT_SECONDS = 3600;
+
+function touchSession(): void
 {
-    return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
+    $now = time();
+    if (isset($_SESSION['last_activity']) && ($now - (int) $_SESSION['last_activity']) > SESSION_TIMEOUT_SECONDS) {
+        session_unset();
+        session_destroy();
+        session_start();
+    }
+    $_SESSION['last_activity'] = $now;
+}
+
+function loginUser(array $user): void
+{
+    session_regenerate_id(true);
+    $_SESSION['user'] = [
+        'id' => (int) $user['id'],
+        'name' => $user['full_name'],
+        'email' => $user['email'],
+        'role' => $user['role'],
+    ];
+    $_SESSION['last_activity'] = time();
+}
+
+function logoutUser(): void
+{
+    session_unset();
+    session_destroy();
 }
 
 function requireAuth(): void
 {
+    touchSession();
     if (!isset($_SESSION['user'])) {
         header('Location: /login.php');
         exit;
